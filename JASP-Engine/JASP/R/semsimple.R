@@ -18,8 +18,8 @@
 # Function to create covariance matrix:
 .covTable <- function(fit,title = "Covariance matrix", include = c("observed","fitted","residual"))
 {
-	observedCov <- inspect(fit, "sampstat")$cov
-	fittedCov <- fitted(fit)$cov
+	observedCov <- lavaan::lavInspect(fit, "sampstat")$cov
+	fittedCov <- lavaan::lavInspect(fit, "sigma")
 	residualCov <- observedCov - fittedCov
 
 	varNames <- colnames(observedCov)
@@ -273,6 +273,7 @@ SEMSimple <- function(dataset=NULL, options, perform="run", callback=function(..
 	    }
 	  }
 	}
+	
 	  
 	inputCorrect <- base::identical(errorCheck, FALSE)
 	######################
@@ -403,6 +404,19 @@ SEMSimple <- function(dataset=NULL, options, perform="run", callback=function(..
 			if (errorMessage == "Error in start.idx[i]:end.idx[i] : NA/NaN argument\n") {
 				errorMessage <- "Model misspecified"
 			}
+			if (grepl("missing observed variables in dataset",errorMessage)){
+			  vars <- unlist(strsplit(regmatches(errorMessage,regexpr("(?<=in dataset:).*$",errorMessage, perl = TRUE)), split = " "))
+			  vars <- vars[vars!=""]
+			  errorMessage <- paste0("Specified observed variables not in dataset: ",paste(.unv(vars),collapse="; "))
+			}
+			if (grepl("can not be measured by itself",errorMessage)){
+			  vars <- unlist(strsplit(regmatches(errorMessage,regexpr("(?<=variable `).*?(?=')",errorMessage, perl = TRUE)), split = " "))
+			  vars <- vars[vars!=""]
+			  errorMessage <- paste0("Latent variable `",.unv(vars),"' can not be measured by itself")
+			}
+			if (grepl("singular",errorMessage)){
+			  errorMessage <- "Observed variables lack variance or perfectly correlate"
+			}
 			semResults <- NULL
 		}
 	} else {
@@ -499,6 +513,13 @@ SEMSimple <- function(dataset=NULL, options, perform="run", callback=function(..
 "AIC", "BIC", "Chisq", "Chisq diff", "Df diff", "Pr(>Chisq)"), row.names = c("Saturated",
 options$modelName), class = c("anova", "data.frame"), heading = "Chi Square Test Statistic (unscaled)\n")
 	} else {
+	  
+	  # Check df:
+	  if (lavaan::fitMeasures(semResults,"df") < 0){
+	    error <- TRUE
+	    errorMessage <- "Negative degrees of freedom"
+	  }
+	  
 	  # Current to saturated:
 	  sem_anova <- lavaan::lavTestLRT(semResults)
 	  rownames(sem_anova)[2] <- options$modelName
@@ -822,7 +843,7 @@ options$modelName), class = c("anova", "data.frame"), heading = "Chi Square Test
 
 		if (!is.null(semResults))
 		{
-			varNames <- lavaanNames(semResults, type = "ov")
+			varNames <- lavaan::lavaanNames(semResults, type = "ov")
 
 			mardiaSkew <- unname(semTools:::mardiaSkew(dataset[,varNames]))
 			mardiaKurtosis <- unname(semTools:::mardiaKurtosis(dataset[,varNames]))

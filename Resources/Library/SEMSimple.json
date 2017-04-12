@@ -72,10 +72,6 @@
 			"default": 10
 		},
 		{
-			"name": "outputObservedCovarianceCorrelations",
-			"type": "Boolean"
-		},
-		{
 			"name": "groupingVariable",
 			"type": "Variable"
 		},
