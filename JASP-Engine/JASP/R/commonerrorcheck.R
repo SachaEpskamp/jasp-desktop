@@ -506,24 +506,24 @@
 }
 
 # Check if data set is variance-covariance matrix
-.checkVarCovMatrix <- function(dataset,nrow=TRUE,symm=TRUE,posdef=TRUE,...){
+.checkVarCovMatrix <- function(dataset, nrow=TRUE, symm=TRUE, posdef=TRUE, ...){
 
   # as matrix:
   dataMatrix <- as.matrix(dataset)
   
   # number of rows equal to number of columns?
-  if (nrow && nrow(dataset) != ncol(dataset)){
+  if (nrow && nrow(dataMatrix) != ncol(dataMatrix)){
     return(list(error=TRUE,reason="Dataset is not a square matrix"))
   }
   
   # Symmetrical?
-  if (symm && !all(round(dataset,10) == t(round(dataset,10)))){
-    return(list(error=TRUE,reason="Matrix is not symmetrical"))
+  if (symm && !all(round(dataMatrix, 10) == t(round(dataMatrix, 10)))){
+    return(list(error=TRUE, reason="Matrix is not symmetric"))
   }
   
   # Positive-definite?
-  if (posdef && any(round(eigen(dataset)$values,10) < 0)){
-    return(list(error=TRUE,reason="Matrix is not positive-definite"))
+  if (posdef && any(round(eigen(dataMatrix)$values, 10) < 0)){
+    return(list(error=TRUE, reason="Matrix is not positive-definite"))
   }
   
   return(list(error=FALSE, reason = ""))

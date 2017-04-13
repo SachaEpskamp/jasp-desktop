@@ -161,7 +161,6 @@
  </customwidgets>
  <resources>
   <include location="../resources/icons.qrc"/>
-  <include location="../resources/icons.qrc"/>
  </resources>
  <connections>
   <connection>
